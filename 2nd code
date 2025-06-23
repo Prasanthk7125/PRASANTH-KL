@@ -1,0 +1,41 @@
+# STEP 1: Install required package
+!pip install --upgrade google-cloud-texttospeech
+
+# STEP 2: Upload service account JSON key
+from google.colab import files
+import os
+uploaded = files.upload()
+json_key = list(uploaded.keys())[0]
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = json_key
+
+# STEP 3: Generate speech using WaveNet
+from google.cloud import texttospeech
+
+def generate_audio(text, output="output.wav"):
+    client = texttospeech.TextToSpeechClient()
+
+    synthesis_input = texttospeech.SynthesisInput(text=text)
+
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="en-US",
+        name="en-US-Wavenet-D",  # You can try "en-US-Wavenet-F" for female voice
+        ssml_gender=texttospeech.SsmlVoiceGender.MALE
+    )
+
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.LINEAR16
+    )
+
+    response = client.synthesize_speech(
+        input=synthesis_input,
+        voice=voice,
+        audio_config=audio_config
+    )
+
+    with open(output, "wb") as out:
+        out.write(response.audio_content)
+        print(f"Audio content written to file: {output}")
+
+# STEP 4: Generate and download the file
+generate_audio("Hello! This is a WaveNet voice speaking from your Google Colab project.")
+files.download("output.wav")
